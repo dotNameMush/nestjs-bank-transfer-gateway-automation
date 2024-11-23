@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Details</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-top: 8px;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .value {
+            font-size: 1.2em;
+            margin-bottom: 16px;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .CREATED { background-color: #e3f2fd; }
+        .PAID { background-color: #e8f5e9; }
+        .PENDING { background-color: #fff3e0; }
+        .CONFIRMED { background-color: #e8f5e9; }
+        .DECLINED { background-color: #ffebee; }
+        .DELETED { background-color: #fafafa; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2196f3;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/orders" class="back-link">← Back to Orders</a>
+        
+        <div class="card">
+            <h1>Order #{{order.id}}</h1>
+            
+            <div class="label">Status</div>
+            <div class="value">
+                <span class="status {{order.status}}">{{order.status}}</span>
+            </div>
+            
+            <div class="label">Change Status</div>
+            <select id="statusSelect" class="status-select">
+                {{#each statuses}}
+                    <option value="{{this}}" {{#if (eq this ../order.status)}}selected{{/if}}>
+                        {{this}}
+                    </option>
+                {{/each}}
+            </select>
+
+            <div class="label">Subtotal</div>
+            <div class="value">${{order.subtotal}}</div>
+
+            <div class="label">Total</div>
+            <div class="value">${{order.total}}</div>
+
+            <div class="label">Created At</div>
+            <div class="value">{{formatDate order.createdAt}}</div>
+
+            <div class="label">Updated At</div>
+            <div class="value">{{formatDate order.updatedAt}}</div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const orderId = {{order.id}};
+        
+        const statusSelect = document.getElementById('statusSelect');
+        
+        statusSelect.addEventListener('change', async (e) => {
+            const newStatus = e.target.value;
+            
+            try {
+                const response = await fetch(`/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                statusSelect.value = '{{order.status}}';
+            }
+        });
+
+        socket.on('orderUpdated', (updatedOrder) => {
+            if (updatedOrder.id === orderId) {
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>

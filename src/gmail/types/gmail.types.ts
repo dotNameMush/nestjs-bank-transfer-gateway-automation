@@ -25,6 +25,7 @@ export interface IEmailFetchOptions {
   maxResults: number;
   labelIds?: string[];
   pageToken?: string;
+  q?: string;
 }
 
 export type GmailMessage = gmail_v1.Schema$Message;

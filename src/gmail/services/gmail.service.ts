@@ -6,6 +6,7 @@ import {
   GmailMessage,
   EmailFetchError,
 } from '../types/gmail.types';
+import { extractOrderId } from 'src/_core/utils/order';
 
 @Injectable()
 export class GmailService implements OnModuleInit {
@@ -46,6 +47,16 @@ export class GmailService implements OnModuleInit {
     }
   }
 
+  async searchEmailOrders(limit: number) {
+    const query =
+      'from:alert@golomtbank.com to:MUNGUNSHAGAIBAYARKHUU@gmail.com subject:"Easy Info гүйлгээний мэдээлэл"';
+    const emails = await this.fetchEmails({
+      maxResults: limit,
+      q: query,
+    });
+    const orders = emails.map((e) => extractOrderId(e.snippet));
+    return orders;
+  }
   private async fetchEmailDetails(messageId: string): Promise<GmailMessage> {
     const email = await this.gmail.users.messages.get({
       userId: 'me',

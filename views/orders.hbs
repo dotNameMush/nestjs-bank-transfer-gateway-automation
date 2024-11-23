@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders Dashboard</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr.clickable {
+            cursor: pointer;
+        }
+        tr.clickable:hover {
+            background-color: #f5f5f5;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .CREATED { background-color: #e3f2fd; }
+        .PAID { background-color: #e8f5e9; }
+        .PENDING { background-color: #fff3e0; }
+        .CONFIRMED { background-color: #e8f5e9; }
+        .DECLINED { background-color: #ffebee; }
+        .DELETED { background-color: #fafafa; }
+    </style>
+</head>
+<body>
+    <h1>Orders Dashboard</h1>
+    <table id="ordersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Status</th>
+                <th>Subtotal</th>
+                <th>Total</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each orders}}
+            <tr class="clickable" data-id="{{this.id}}">
+                <td>ORD-{{this.id}}</td>
+                <td><span class="status {{this.status}}">{{this.status}}</span></td>
+                <td>${{this.subtotal}}</td>
+                <td>${{this.total}}</td>
+                <td>{{formatDate this.createdAt}}</td>
+                <td>{{formatDate this.updatedAt}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <script>
+        const socket = io();
+        
+        // Add click event listener to table rows
+        document.querySelector('#ordersTable tbody').addEventListener('click', (e) => {
+            const row = e.target.closest('tr');
+            if (row && row.dataset.id) {
+                window.location.href = `/orders/${row.dataset.id}`;
+            }
+        });
+        
+        socket.on('orders', (orders) => {
+            updateOrdersTable(orders);
+        });
+
+        socket.on('orderUpdated', () => {
+            socket.emit('findAllOrders');
+        });
+
+        function updateOrdersTable(orders) {
+            const tbody = document.querySelector('#ordersTable tbody');
+            tbody.innerHTML = orders.map(order => `
+                <tr class="clickable" data-id="${order.id}">
+                    <td>ORD-${order.id.toString().padStart(4, '0')}</td>
+                    <td><span class="status ${order.status}">${order.status}</span></td>
+                    <td>$${order.subtotal}</td>
+                    <td>$${order.total}</td>
+                    <td>${new Date(order.createdAt).toLocaleString()}</td>
+                    <td>${new Date(order.updatedAt).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

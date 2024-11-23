@@ -2,13 +2,28 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { join } from 'path';
+import * as hbs from 'hbs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
   const port = configService.get<number>('PORT') || 5000;
+
+  hbs.registerHelper('eq', function (a, b) {
+    return a === b;
+  });
+
+  hbs.registerHelper('formatDate', function (date) {
+    return new Date(date).toLocaleString();
+  });
+
+  app.useStaticAssets(join(process.cwd(), '/', 'public'));
+  app.setBaseViewsDir(join(process.cwd(), '/', 'views'));
+  app.setViewEngine('hbs');
 
   app.useGlobalPipes(
     new ValidationPipe({
