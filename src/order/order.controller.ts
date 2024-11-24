@@ -84,14 +84,14 @@ export class OrderController {
     await this.orderGateway.broadcastOrderUpdate(order);
     return order;
   }
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     const now = new Date();
     console.log(`[CRON] Job started at: ${now.toISOString()}`);
 
     try {
       // Fetch all PAID orders
-      const paidOrders = await this.orderService.checkPaid();
+      const paidOrders = await this.orderService.getOrderCache();
 
       if (!paidOrders || paidOrders.length === 0) {
         console.log('[CRON] No PAID orders found');
