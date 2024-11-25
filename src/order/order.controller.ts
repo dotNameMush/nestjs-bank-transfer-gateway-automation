@@ -104,14 +104,18 @@ export class OrderController {
       const emailOrderIdList = await this.gmailService.searchEmailOrders(
         paidOrders.length,
       );
+
       console.log(`[CRON] Retrieved ${emailOrderIdList.length} email orders`);
 
       // Process each order
       const updatePromises = paidOrders.map(async (order) => {
         const formattedOrderId = formatOrderId(order.id);
-        const newStatus = emailOrderIdList.includes(formattedOrderId)
-          ? OrderStatus.CONFIRMED
-          : OrderStatus.PENDING;
+        const filtered = emailOrderIdList.filter(
+          (obj) =>
+            obj.amount == order.amount && obj.orderId === formattedOrderId,
+        );
+        const newStatus =
+          filtered.length === 0 ? OrderStatus.PENDING : OrderStatus.CONFIRMED;
 
         console.log(`[CRON] Updating order ID ${order.id} to ${newStatus}`);
 

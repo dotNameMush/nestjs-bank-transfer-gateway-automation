@@ -66,6 +66,7 @@ export class OrderService {
       const newItem: OrderCache = {
         id: order.id,
         status: order.status,
+        amount: order.total,
       };
       await this.cacheManager.set(cacheKey, [...cache, newItem], ttl);
     } else if (order.status == OrderStatus.PENDING) {
